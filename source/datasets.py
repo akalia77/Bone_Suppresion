@@ -302,37 +302,44 @@ class BoneDataset(AbstractDataset):
         
         
         
-        # srcImg =  Image.open(img_path_src).convert('L')
-        # trgImg =  Image.open(img_path_trg).convert('L')
+        srcImg =  Image.open(img_path_src).convert('L')
+        trgImg =  Image.open(img_path_trg).convert('L')
         
         
-        srcImg = cv2.imread(img_path_src,cv2.IMREAD_GRAYSCALE)       
+        # srcImg = cv2.imread(img_path_src,cv2.IMREAD_GRAYSCALE)       
 
-        trgImg = cv2.imread(img_path_trg,cv2.IMREAD_GRAYSCALE)
+        # trgImg = cv2.imread(img_path_trg,cv2.IMREAD_GRAYSCALE)
         
         # # srcImg =  mpImg.imread(img_path_src)[:,:,0]*10000
         # # trgImg =  mpImg.imread(img_path_trg)*10000
-        # r= np.random.randint(-10,8)
-        # out_s = tvF.rotate(Image.fromarray(srcImg),r)
-        # out_t = tvF.rotate(Image.fromarray(trgImg),r)
+        r= np.random.randint(-10,8)
+        out_s = tvF.rotate(srcImg,r)
+        out_t = tvF.rotate(trgImg,r)
         
-        # rSize=np.random.randint(15)
-        # outSize = (self.crop_size-rSize,self.crop_size-rSize)
-        # i, j, h, w = transforms.RandomCrop.get_params(out_s, output_size=outSize)
+        rSize=np.random.randint(15)
+        outSize = (srcImg.size[1]-rSize,srcImg.size[0]-rSize)
+        i, j, h, w = transforms.RandomCrop.get_params(out_s, output_size=outSize)
 
+        print(f"rotation: {r}, cropSize: {rSize}")
         
-        # out_s= tvF.crop(out_s, i, j, h, w)
-        # out_t= tvF.crop(out_t, i, j, h, w)
+        out_s= tvF.crop(out_s, i, j, h, w)
+        out_t= tvF.crop(out_t, i, j, h, w)
         
         # f_resize= transforms.Resize(self.crop_size)
 
-        srcImg = cv2.resize(srcImg,(self.crop_size,self.crop_size))
-        trgImg = cv2.resize(trgImg,(self.crop_size,self.crop_size))
+        # srcImg = cv2.resize(srcImg,(self.crop_size,self.crop_size))
+        # trgImg = cv2.resize(trgImg,(self.crop_size,self.crop_size))
+
+        # srcImg = srcImg,(self.crop_size,self.crop_size))
+        # trgImg = trgImg,(self.crop_size,self.crop_size))
+        
         
         # srcImg = f_resize(out_s)
         # trgImg = f_resize(out_t)
         
         # float image 
+        srcImg=out_s.resize((self.crop_size,self.crop_size),resample=Image.BICUBIC)
+        trgImg=out_t.resize((self.crop_size,self.crop_size),resample=Image.BICUBIC)
         
         source = tvF.to_tensor(srcImg)
         target = tvF.to_tensor(trgImg)
