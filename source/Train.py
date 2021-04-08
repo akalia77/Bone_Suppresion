@@ -68,7 +68,7 @@ def parse_args():
                             
                             # "--load-ckpt","../saved/grid-clean-210322-8depth/n2n-epoch101-79.65783.pt",
                             # "--load-ckpt","../saved/bone-clean-210326-1658/n2n-epoch998-1.16489.pt",
-                            "--load-ckpt","../saved/bone-clean-210329-0815/n2n-epoch834-0.78969.pt",
+                            # "--load-ckpt","../saved/bone-clean-210329-0815/n2n-epoch834-0.78969.pt",
                             
                             "--loss","ssim",
                             # "--loss","ms-ssim",
