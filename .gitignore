@@ -1,3 +1,5 @@
+#don't updat file 
+*.pyc
 
 #don't update directory
 ckpts/
