@@ -63,60 +63,55 @@ class UNet(nn.Module):
             #     nn.Conv2d(32, out_channels, 3, stride=1, padding=1),
             #     nn.LeakyReLU(0.1))
         # else:
-        depth = 16
-        f_size=5; pad =2
-        # f_size=3; pad =1
-        
-        
-        
-        
+        depth = 8
         # Layers: enc_conv0, enc_conv1, pool1
         self._block1 = nn.Sequential(
-            nn.Conv2d(in_channels, depth, f_size, stride=1, padding=pad),
+            nn.Conv2d(in_channels, depth, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(depth, depth, f_size, padding=pad),
+            nn.Conv2d(depth, depth, 3, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))
 
         # Layers: enc_conv(i), pool(i); i=2..5
         self._block2 = nn.Sequential(
-            nn.Conv2d(depth, depth, f_size, stride=1, padding=pad),
+            nn.Conv2d(depth, depth, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2))
 
         # Layers: enc_conv6, upsample5
         self._block3 = nn.Sequential(
-            nn.Conv2d(depth, depth, f_size, stride=1, padding=pad),
+            nn.Conv2d(depth, depth, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(depth, depth, f_size, stride=2, padding=pad, output_padding=1))
+            nn.ConvTranspose2d(depth, depth, 3, stride=2, padding=1, output_padding=1))
             #nn.Upsample(scale_factor=2, mode='nearest'))
 
         # Layers: dec_conv5a, dec_conv5b, upsample4
         self._block4 = nn.Sequential(
-            nn.Conv2d(depth*2, depth*2, f_size, stride=1, padding=pad),
+            nn.Conv2d(depth*2, depth*2, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(depth*2, depth*2, f_size, stride=1, padding=pad),
+            nn.Conv2d(depth*2, depth*2, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(depth*2, depth*2, f_size, stride=2, padding=pad, output_padding=1))
+            nn.ConvTranspose2d(depth*2, depth*2, 3, stride=2, padding=1, output_padding=1))
             #nn.Upsample(scale_factor=2, mode='nearest'))
 
         # Layers: dec_deconv(i)a, dec_deconv(i)b, upsample(i-1); i=4..2
         self._block5 = nn.Sequential(
-            nn.Conv2d(depth*3, depth*2, f_size, stride=1, padding=pad),
+            nn.Conv2d(depth*3, depth*2, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(depth*2, depth*2, f_size, stride=1, padding=pad),
+            nn.Conv2d(depth*2, depth*2, 3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(depth*2, depth*2, f_size, stride=2, padding=pad, output_padding=1))
+            nn.ConvTranspose2d(depth*2, depth*2, 3, stride=2, padding=1, output_padding=1))
             #nn.Upsample(scale_factor=2, mode='nearest'))
 
         # Layers: dec_conv1a, dec_conv1b, dec_conv1c,
         self._block6 = nn.Sequential(
-                nn.Conv2d(depth*2 + in_channels, depth, f_size, stride=1, padding=pad),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(depth, depth, f_size, stride=1, padding=pad),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(depth, out_channels, f_size, stride=1, padding=pad),
-                nn.LeakyReLU(0.1))
+            nn.Conv2d(depth*2 + in_channels, depth, 3, stride=1, padding=1),
+            # nn.Conv2d(depth*2 + in_channels, 64, 3, stride=1, padding=1),
+            # nn.ReLU(inplace=True),
+            # nn.Conv2d(64, 32, 3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(depth, out_channels, 3, stride=1, padding=1),
+            nn.LeakyReLU(0.1))
 
         # Initialize weights
         self._init_weights()

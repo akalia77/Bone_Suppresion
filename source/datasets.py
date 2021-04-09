@@ -320,7 +320,7 @@ class BoneDataset(AbstractDataset):
         outSize = (srcImg.size[1]-rSize,srcImg.size[0]-rSize)
         i, j, h, w = transforms.RandomCrop.get_params(out_s, output_size=outSize)
 
-        print(f"rotation: {r}, cropSize: {rSize}")
+        # print(f"rotation: {r}, cropSize: {rSize}")
         
         out_s= tvF.crop(out_s, i, j, h, w)
         out_t= tvF.crop(out_t, i, j, h, w)
@@ -340,6 +340,9 @@ class BoneDataset(AbstractDataset):
         # float image 
         srcImg=out_s.resize((self.crop_size,self.crop_size),resample=Image.BICUBIC)
         trgImg=out_t.resize((self.crop_size,self.crop_size),resample=Image.BICUBIC)
+        
+        srcImg = (srcImg/np.amax(srcImg) * 1000).astype(np.float32)
+        trgImg = (trgImg/np.amax(trgImg) * 1000).astype(np.float32)
         
         source = tvF.to_tensor(srcImg)
         target = tvF.to_tensor(trgImg)

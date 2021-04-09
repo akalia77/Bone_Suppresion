@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import cv2
 import numpy as np 
-from torch.optim import Adam, lr_scheduler
+from torch.optim import Adam, AdamW,lr_scheduler
 import torchvision.transforms.functional as tvF
 from pytorch_msssim import MS_SSIM, ms_ssim, SSIM, ssim
 
@@ -28,6 +28,13 @@ class MS_SSIM_Loss(MS_SSIM):
 class SSIM_Loss(SSIM):
     def forward(self, img1, img2):
         return 100*( 1 - super(SSIM_Loss, self).forward(img1, img2) )
+
+
+class MSE_SSIM_Loss(SSIM):
+    def forward(self, img1, img2):
+        # alpha = 0.83
+        alpha = 0.81
+        return (1-alpha)*nn.MSELoss().forward( img1, img2) +(alpha)*10* MS_SSIM_Loss(data_range=1.0, size_average=True, channel=1)(img1,img2)  
 
 
 class Noise2Noise(object):
@@ -62,7 +69,7 @@ class Noise2Noise(object):
 
         # Set optimizer and loss, if in training mode
         if self.trainable:
-            self.optim = Adam(self.model.parameters(),
+            self.optim = AdamW(self.model.parameters(),
                               lr=self.p.learning_rate,
                               betas=self.p.adam[:2],
                               eps=self.p.adam[2])
@@ -81,6 +88,8 @@ class Noise2Noise(object):
                 self.loss  = SSIM_Loss(data_range=1.0, size_average=True, channel=1)
             elif self.p.loss == 'ms-ssim':                
                 self.loss   = MS_SSIM_Loss(data_range=1.0, size_average=True, channel=1)
+            elif self.p.loss == 'mse-ssim':
+                self.loss   = MSE_SSIM_Loss()
             else:
                 self.loss = nn.L1Loss()
 
@@ -114,7 +123,7 @@ class Noise2Noise(object):
         # Create directory for model checkpoints, if nonexistent
         if first:
             if self.p.clean_targets:
-                ckpt_dir_name = f'{datetime.now():{self.p.noise_type}-clean-%y%m%d-%H%M}'
+                ckpt_dir_name = f'{datetime.now():{self.p.noise_type}-clean-%y%m%d-%H%M-{self.p.loss}}'
             else:
                 ckpt_dir_name = f'{datetime.now():{self.p.noise_type}-%y%m%d-%H%M}'
             if self.p.ckpt_overwrite:
@@ -164,8 +173,8 @@ class Noise2Noise(object):
         # Evaluate model on validation set
         print('\rTesting model on validation set... ', end='')
         epoch_time = time_elapsed_since(epoch_start)[0]
-        valid_loss, valid_time, valid_psnr ,imgSrc,imgDe,imgClean = self.eval(valid_loader,epoch)
-        show_on_epoch_end(epoch_time, valid_time, valid_loss, valid_psnr)
+        valid_loss, valid_time, valid_ssim ,imgSrc,imgDe,imgClean = self.eval(valid_loader,epoch)
+        show_on_epoch_end(epoch_time, valid_time, valid_loss, valid_ssim)
 
         # Decrease learning rate if plateau
         self.scheduler.step(valid_loss)
@@ -173,7 +182,7 @@ class Noise2Noise(object):
         # Save checkpoint
         stats['train_loss'].append(train_loss)
         stats['valid_loss'].append(valid_loss)
-        stats['valid_psnr'].append(valid_psnr)
+        stats['valid_ssim'].append(valid_ssim)
         self.save_model(epoch, stats, epoch == 0)
 
         self.saveImage(epoch,valid_loss,imgSrc,imgDe,imgClean)
@@ -182,7 +191,7 @@ class Noise2Noise(object):
         if self.p.plot_stats:
             loss_str = f'{self.p.loss.upper()} loss'
             plot_per_epoch(self.ckpt_dir, 'Valid loss', stats['valid_loss'], loss_str)
-            plot_per_epoch(self.ckpt_dir, 'Valid PSNR', stats['valid_psnr'], 'PSNR (dB)')
+            plot_per_epoch(self.ckpt_dir, 'valid_ssim', stats['valid_ssim'], 'SSIM')
 
     def testOnefile(self,inPath,w,h):
         
@@ -233,7 +242,27 @@ class Noise2Noise(object):
         
         return img
         
-
+    def bonePredictOut(self,sourceIn):
+        
+        self.model.eval()
+        
+        h,w = sourceIn.shape[:2]
+        rSize = (2048,2048)
+        reSizeImg= cv2.resize(sourceIn,rSize ,interpolation=cv2.INTER_CUBIC)
+        
+        
+        reSizeImg = reSizeImg/reSizeImg.max() * 1000
+        
+        s=tvF.to_tensor(reSizeImg.astype(np.float32))
+        
+        sIn = torch.unsqueeze(s,0).cuda()
+        
+        # a=out.squeeze().cpu()
+         
+        outImg = sourceIn
+        
+        return outImg
+    
     def testOneFileCrop(self,imgArray,w,h,c_size,b_size,devicetype):
         
         self.model.train(False)
@@ -415,7 +444,8 @@ class Noise2Noise(object):
         src_denoise= denoised_t.detach().cpu().numpy().squeeze()
         target= clean_t.detach().cpu().numpy().squeeze()
         
-        diff = src_denoise - target
+        # diff = src_denoise - target
+        diff = src -src_denoise
 
         # fig, ax = plt.subplots(1, 3, figsize=(9, 3))
         fig, ax = plt.subplots(2, 2, figsize=(9, 9))
@@ -437,7 +467,7 @@ class Noise2Noise(object):
                 'Ground truth',
                 'Diff']
         
-        zipped = zip(titles, [src, src_denoise, target])
+        zipped = zip(titles, [src, src_denoise, target,diff])
         for j, (title, img) in enumerate(zipped):
             ax[int(j/2),int(j%2)].imshow(img)
             ax[int(j/2),int(j%2)].set_title(title)
@@ -470,6 +500,7 @@ class Noise2Noise(object):
         valid_start = datetime.now()
         loss_meter = AvgMeter()
         psnr_meter = AvgMeter()
+        ssim_meter =AvgMeter()
 
         rSrc =[]
         rde =[]
@@ -482,9 +513,13 @@ class Noise2Noise(object):
 
             # Denoise
             source_denoised = self.model(source)
+            
+            dif_sorce= source -target
+
 
             # Update loss
-            loss = self.loss(source_denoised, target)
+            # loss = self.loss(source_denoised, target)
+            loss = self.loss(source_denoised, dif_sorce)
             loss_meter.update(loss.item())
 
             if batch_idx == 0:
@@ -499,16 +534,23 @@ class Noise2Noise(object):
             for i in range(self.p.batch_size):
                 source_denoised = source_denoised.cpu()
                 target = target.cpu()
+                dif_sorce = dif_sorce.cpu()
                 
                 psnr_meter.update(psnr(source_denoised[i], target[i]).item())
+                
+                ssim_meter.update(ssim(source_denoised, dif_sorce,data_range=1.0).item())
 
         # sumWriter = SummaryWriter()
         # self.saveImage(saveImg)
-
+		
+        # dif_sorce= source -target
+        # ssim_value=ssim(source_denoised, dif_sorce,data_range=1.0)
+                
 
         valid_loss = loss_meter.avg
         valid_time = time_elapsed_since(valid_start)[0]
         psnr_avg = psnr_meter.avg
+        ssim_avg= ssim_meter.avg
 
 
 
@@ -517,8 +559,10 @@ class Noise2Noise(object):
         # sumWriter.add_image('img/epoch_img',saveImg,epoch)
         
         # sumWriter.close() ,rSrc,rSrc_de,rtarget
+
+        self.model.train(True)
         
-        return valid_loss, valid_time, psnr_avg ,rSrc,rde,rtarget
+        return valid_loss, valid_time, ssim_avg ,rSrc,rde,rtarget
 
     def train(self, train_loader, valid_loader):
         """Trains denoiser on training set."""
@@ -534,6 +578,7 @@ class Noise2Noise(object):
                  'noise_param': self.p.noise_param,
                  'train_loss': [],
                  'valid_loss': [],
+                 'valid_ssim': [],
                  'valid_psnr': []}
 
         # Main training loop
@@ -558,8 +603,11 @@ class Noise2Noise(object):
 
                 # Denoise image
                 source_denoised = self.model(source)
+                
+                dif_sorce= source -target
 
-                loss = self.loss(source_denoised, target)
+                # loss = self.loss(source_denoised, target)
+                loss = self.loss(source_denoised, dif_sorce)
                 loss_meter.update(loss.item())
 
                 # b=target.detach().squeeze().cpu()

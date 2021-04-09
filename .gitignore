@@ -3,4 +3,5 @@
 
 #don't update directory
 ckpts/
-
+.spyproject/
+.vscode/

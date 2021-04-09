@@ -10,6 +10,7 @@ import cv2
 import torch.nn as nn
 import numpy as np 
 import matplotlib.pyplot as plt
+from pydicom import dcmread
 
 from PIL import Image, ImageFont, ImageDraw
 
@@ -24,6 +25,24 @@ import torchvision.transforms.functional as tvF
 import torchvision
 import timeit
 from torch.utils import mkldnn
+
+#%% read dicom file 
+
+def readDicomfile(path):
+    
+        
+    
+    ds = dcmread(path )
+    
+    dimImg = ds.pixel_array
+    
+    # wfname = f"{file_Name}_{ds.Columns}x{ds.Rows}.raw"
+    # npImg.tofile(wfname )       
+    
+    # print(f"writefile:{wfname}")
+   
+    return dimImg
+    
 
 
 #%%
@@ -55,16 +74,7 @@ def parse_args():
                                 # "--noise-type","gaussian",
                                 # "--load-ckpt","../ckpts/text-1643/n2n-epoch9-0.04232.pt",
                                 "--noise-type","grid",
-                                # "--load-ckpt","../ckpts/grid-1759/n2n-epoch120-0.00099.pt",
-                                # "--load-ckpt","../ckpts/grid-1058/n2n-epoch18-0.00068.pt",
-                                # "--load-ckpt","../saved/grid-clean-210205/n2n-epoch996-2.95751.pt",
-                                # "--load-ckpt","../saved/grid-clean-210215/n2n-epoch997-8.27363.pt",
-                                # "--load-ckpt","../saved/grid-clean-210217/n2n-epoch993-5.26789.pt",
-                                # "--load-ckpt","../saved/grid-clean-210218_test/n2n-epoch10-138.38759.pt",
-                                # "--load-ckpt","../saved/grid-clean-210217/n2n-epoch993-5.26789.pt",
-                                # "--load-ckpt","../saved/grid-clean-210218/n2n-epoch999-2.76057.pt",
-                                # "--load-ckpt","../saved/grid-clean-210312/n2n-epoch999-64.86539.pt",
-                                "--load-ckpt","../saved/grid-clean-210322-8depth/n2n-epoch101-79.65783.pt",
+                                "--load-ckpt","../saved/bone-clean-210331-1723/n2n-epoch999-1.01681.pt",
                                 
                                 
                                 
@@ -88,8 +98,8 @@ def parse_args():
 
 # loadFileName = "Before_grid_suppression_chest_phantom_3072x3072.raw"
 # loadFileName = "./testImgs/BonTech_4_Skull-phantom_110Lp-grid_3072x3072.raw"
-loadFileName = "./testImgs/BonTech_3_Chest-phantom_110Lp-grid_3072x3072.raw"
-# loadFileName = "./testImgs/Before_grid_suppression_chest_phantom_3072x3072.raw"
+# loadFileName = "./testImgs/BonTech_3_Chest-phantom_110Lp-grid_3072x3072.raw"
+loadFileName = "../TestImg/grid012.dcm"
 
 img_w=3072
 img_h=3072
@@ -104,24 +114,30 @@ params.clean_targets = True
 n2n.load_model(params.load_ckpt)
 # d_img=n2n.testOnefile(loadFileName,img_w, img_h)
 
-imgArray = np.fromfile(loadFileName, dtype=np.uint16).reshape(img_w,img_h)
+# imgArray = np.fromfile(loadFileName, dtype=np.uint16).reshape(img_w,img_h)
 
-inMax = imgArray.max()
-# devicetype = "cuda"
-devicetype = "cpu"
+# inMax = imgArray.max()
+devicetype = "cuda"
+# devicetype = "cpu"
+
+diImg= readDicomfile(loadFileName)
+
+outImg= n2n.bonePredictOut(diImg)
+
+
 
 timeS = timeit.default_timer()
-d_imgO=n2n.testOneFileCrop(imgArray,img_w, img_h,256,16,devicetype )
+# d_imgO=n2n.testOneFileCrop(imgArray,img_w, img_h,256,16,devicetype )
 
 timeE =timeit.default_timer()
 print("run:: %f sec "%(timeE-timeS))
 
-d_img= (d_imgO/1000)* inMax
+# d_img= (d_imgO/1000)* inMax
 
-d_img=np.array(d_img).astype(np.uint16)
+# d_img=np.array(d_img).astype(np.uint16)
 
 
-d_img.tofile("./testOutImage/test0315_gpu_BonTech_3_Chest-phantom_110Lp-grid_3072x3072.raw")
+# d_img.tofile("./testOutImage/test0315_gpu_BonTech_3_Chest-phantom_110Lp-grid_3072x3072.raw")
 # d_img.tofile("test0217_newImg_BonTech_3_Chest-phantom_110Lp-grid_pad16_256_3072x3072.raw")
 
 # d_img

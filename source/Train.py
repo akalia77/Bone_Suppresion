@@ -30,11 +30,12 @@ def parse_args():
 
     # Training hyperparameters
     # parser.add_argument('-lr', '--learning-rate', help='learning rate', default=0.001, type=float)
-    parser.add_argument('-lr', '--learning-rate', help='learning rate', default=0.0001, type=float)
+    parser.add_argument('-lr', '--learning-rate', help='learning rate', default=0.001, type=float)
     parser.add_argument('-a', '--adam', help='adam parameters', nargs='+', default=[0.9, 0.99, 1e-8], type=list)
     parser.add_argument('-b', '--batch-size', help='minibatch size', default=4, type=int)
     parser.add_argument('-e', '--nb-epochs', help='number of epochs', default=100, type=int)
-    parser.add_argument('-l', '--loss', help='loss function', choices=['l1', 'l2', 'hdr','ssim','ms-ssim'], default='l1', type=str)
+    parser.add_argument('-l', '--loss', help='loss function', 
+                        choices=['l1', 'l2', 'hdr','ssim','ms-ssim','mse-ssim'], default='l1', type=str)
     parser.add_argument('--cuda', help='use cuda', action='store_true')
     parser.add_argument('--plot-stats', help='plot stats after every epoch', action='store_true')
     parser.add_argument('--load-ckpt', help='load model checkpoint')
@@ -58,7 +59,7 @@ def parse_args():
                             "--nb-epochs","1000",
                             
                             "--ckpt-save-path","../ckpts",
-                            "--batch-size","1",
+                            "--batch-size","5",
                             "--report-interval","20",
                             # "--batch-size","1",
                             # "--report-interval","50",
@@ -66,12 +67,12 @@ def parse_args():
                             # "--learning-rate" , "0.001"
 
                             
-                            # "--load-ckpt","../saved/grid-clean-210322-8depth/n2n-epoch101-79.65783.pt",
-                            # "--load-ckpt","../saved/bone-clean-210326-1658/n2n-epoch998-1.16489.pt",
-                            # "--load-ckpt","../saved/bone-clean-210329-0815/n2n-epoch834-0.78969.pt",
+                            # "--load-ckpt","../saved/bone-clean-210331-1723/n2n-epoch999-1.01681.pt",
                             
-                            "--loss","ssim",
+                            # "--loss","ssim",
                             # "--loss","ms-ssim",
+                            "--loss","mse-ssim",
+                            
                             "--noise-type","bone",
                             "--noise-param","50",                            
                             # "--noise-type","gaussian",

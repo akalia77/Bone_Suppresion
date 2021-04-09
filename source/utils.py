@@ -48,11 +48,11 @@ def time_elapsed_since(start):
     return string, ms
 
 
-def show_on_epoch_end(epoch_time, valid_time, valid_loss, valid_psnr):
+def show_on_epoch_end(epoch_time, valid_time, valid_loss, valid_ssim):
     """Formats validation error stats."""
 
     clear_line()
-    print('Train time: {} | Valid time: {} | Valid loss: {:>1.5f} | Avg PSNR: {:.2f} dB'.format(epoch_time, valid_time, valid_loss, valid_psnr))
+    print('Train time: {} | Valid time: {} | Valid loss: {:>1.5f} | Avg SSIM: {:.2f}'.format(epoch_time, valid_time, valid_loss, valid_ssim))
 
 
 def show_on_report(batch_idx, num_batches, loss, elapsed):
@@ -90,7 +90,7 @@ def load_hdr_as_tensor(img_path):
 #     src = OpenEXR.InputFile(img_path)
 #     pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
 #     dw = src.header()['dataWindow']
-#     size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+#     size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1) 
     
 #     # Read into tensor
     # tensor = torch.zeros((3, size[1], size[0]))
@@ -99,7 +99,7 @@ def load_hdr_as_tensor(img_path):
 #         tensor[i, :, :] = torch.from_numpy(rgb32f.reshape(size[1], size[0]))
         
     # return tensor
-    return 
+    return  
 
 
 def reinhard_tonemap(tensor):
