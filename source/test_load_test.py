@@ -61,7 +61,7 @@ def parse_args():
 
     # Corruption parameters
     parser.add_argument('-n', '--noise-type', help='noise type',
-        choices=['gaussian', 'grid','poisson', 'text', 'mc'], default='gaussian', type=str)
+        choices=['gaussian', 'grid','poisson', 'text', 'mc',"bone"], default='gaussian', type=str)
     parser.add_argument('-v', '--noise-param', help='noise parameter (e.g. sigma for gaussian)', default=50, type=float)
     parser.add_argument('-s', '--seed', help='fix random seed', type=int)
     parser.add_argument('-c', '--crop-size', help='image crop size', default=256, type=int)
@@ -73,8 +73,10 @@ def parse_args():
                                 # "--load-ckpt","../ckpts/gaussian/n2n-gaussian.pt",
                                 # "--noise-type","gaussian",
                                 # "--load-ckpt","../ckpts/text-1643/n2n-epoch9-0.04232.pt",
-                                "--noise-type","grid",
-                                "--load-ckpt","../saved/bone-clean-210331-1723/n2n-epoch999-1.01681.pt",
+                                "--noise-type","bone",
+                                # "--load-ckpt","../saved/bone-clean-210331-1723/n2n-epoch999-1.01681.pt",
+                                "--load-ckpt","../saved/bone-clean-210409-1653-l2/n2n-epoch999-68.65568.pt",
+                                
                                 
                                 
                                 
@@ -98,8 +100,8 @@ def parse_args():
 
 # loadFileName = "Before_grid_suppression_chest_phantom_3072x3072.raw"
 # loadFileName = "./testImgs/BonTech_4_Skull-phantom_110Lp-grid_3072x3072.raw"
-# loadFileName = "./testImgs/BonTech_3_Chest-phantom_110Lp-grid_3072x3072.raw"
-loadFileName = "../TestImg/grid012.dcm"
+loadFileName = "./testImgs/BonTech_3_Chest-phantom_110Lp-grid_3072x3072.raw"
+# loadFileName = "../TestImg/grid012.dcm"
 
 img_w=3072
 img_h=3072
@@ -120,9 +122,9 @@ n2n.load_model(params.load_ckpt)
 devicetype = "cuda"
 # devicetype = "cpu"
 
-diImg= readDicomfile(loadFileName)
+# diImg= readDicomfile(loadFileName)
 
-outImg= n2n.bonePredictOut(diImg)
+# outImg= n2n.bonePredictOut(diImg)
 
 
 

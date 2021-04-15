@@ -255,9 +255,19 @@ class Noise2Noise(object):
         
         s=tvF.to_tensor(reSizeImg.astype(np.float32))
         
-        sIn = torch.unsqueeze(s,0).cuda()
+        # sIn = torch.unsqueeze(s,0).cuda()
         
+        sourceIn = torch.unsqueeze(s,0).cuda()
+        
+        ts= timeit.default_timer()
+        denoised_img = self.model(sourceIn).detach()
+        te= timeit.default_timer()
+        print("m_run:: %f sec "%(te-ts))
+        
+        out = denoised_img.detach().squeeze().cpu().numpy()
+
         # a=out.squeeze().cpu()
+        # a=source_denoised.detach().squeeze().cpu()
          
         outImg = sourceIn
         
@@ -406,6 +416,7 @@ class Noise2Noise(object):
 
             time_elapsed = timeit.default_timer()-time_start
             print('Testing Process done! Total elapsed time: {} msec\n'.format(time_elapsed*1000))
+            # a=source_denoised.detach().squeeze().cpu()
 
 
             denoised_imgs.append(denoised_img)

@@ -29,7 +29,7 @@ def parse_args():
 
     # Corruption parameters
     parser.add_argument('-n', '--noise-type', help='noise type',
-        choices=['gaussian', 'grid','poisson', 'text', 'mc'], default='gaussian', type=str)
+        choices=['gaussian', 'grid','poisson', 'text', 'mc','bone'], default='gaussian', type=str)
     parser.add_argument('-v', '--noise-param', help='noise parameter (e.g. sigma for gaussian)', default=50, type=float)
     parser.add_argument('-s', '--seed', help='fix random seed', type=int)
     parser.add_argument('-c', '--crop-size', help='image crop size', default=256, type=int)
@@ -37,22 +37,23 @@ def parse_args():
     args = parser.parse_args(
                                 [
                                 # "--data","../data/test",
-                                "--data","../data/test_grid",
+                                "--data","../datasets/valid_bone",
+                                
                                 # "--load-ckpt","../ckpts/gaussian/n2n-gaussian.pt",
                                 # "--noise-type","gaussian",
                                 # "--load-ckpt","../ckpts/text-1643/n2n-epoch9-0.04232.pt",
-                                "--noise-type","grid",
+                                "--noise-type","bone",
                                 # "--load-ckpt","../ckpts/grid-1759/n2n-epoch120-0.00099.pt",
                                 # "--load-ckpt","../ckpts/grid-1058/n2n-epoch18-0.00068.pt",
                                 # "--load-ckpt","../saved/grid_0123/n2n-epoch446-0.00522.pt",
                                 # "--load-ckpt","../saved/grid-clean-210217/n2n-epoch993-5.26789.pt",
-                                "--load-ckpt","../saved/grid-clean-210218/n2n-epoch999-2.76057.pt",
+                                "--load-ckpt","../saved/bone-clean-210409-1653-l2/n2n-epoch999-68.65568.pt",
                                 
                                 # "--noise-type","text",
                                 # "--noise-param","50",
                                 "--noise-param","0.4",
                                 # "--crop-size","128",
-                                "--crop-size","256",
+                                "--crop-size","1024",
                                 "--show-output","3",
                                 "--cuda",
                                 ]

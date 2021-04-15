@@ -4,6 +4,8 @@
 import torch
 import torch.nn as nn
 
+from pydicom import dcmread
+
 from datasets import load_dataset
 from noise2noise import Noise2Noise
 from argparse import ArgumentParser
@@ -11,6 +13,22 @@ from argparse import ArgumentParser
 from torch.utils.tensorboard import SummaryWriter
 
 #  https://github.com/joeylitalien/noise2noise-pytorch
+
+
+def readDicomfile(path):
+    
+        
+    
+    ds = dcmread(path )
+    
+    dimImg = ds.pixel_array
+    
+    # wfname = f"{file_Name}_{ds.Columns}x{ds.Rows}.raw"
+    # npImg.tofile(wfname )       
+    
+    # print(f"writefile:{wfname}")
+   
+    return dimImg
 
 
 def parse_args():
@@ -68,10 +86,12 @@ def parse_args():
 
                             
                             # "--load-ckpt","../saved/bone-clean-210331-1723/n2n-epoch999-1.01681.pt",
+                            "--load-ckpt","../saved/bone-clean-210409-1653-l2/n2n-epoch999-68.65568.pt",
                             
+                            "--loss","l2",
                             # "--loss","ssim",
                             # "--loss","ms-ssim",
-                            "--loss","mse-ssim",
+                            # "--loss","mse-ssim",
                             
                             "--noise-type","bone",
                             "--noise-param","50",                            
